@@ -53,7 +53,7 @@ El proyecto consiste en una API backend que permite a los asegurados agendar cit
 1. Clona el repositorio:
 
     ```bash
-    git clone https://github.com/tu-usuario/reto-rimac-backend.git
+    git clone https://github.com/llandresll/reto-rimac-backend.git
     cd reto-rimac-backend
     ```
 
@@ -64,38 +64,6 @@ El proyecto consiste en una API backend que permite a los asegurados agendar cit
     ```
 
 ## **Configuración**
-
-1. Crea un archivo `.env` en la raíz del proyecto con las siguientes variables de entorno:
-
-    ```plaintext
-    # Variables de entorno para RDS (MySQL)
-    RDS_HOST=my-database.xxxxxxxxxxxx.us-east-1.rds.amazonaws.com
-    RDS_USER=admin
-    RDS_PASSWORD=my-secret-password
-    RDS_DATABASE=appointments_db
-
-    # Variables de entorno para SNS (Simple Notification Service)
-    SNS_TOPIC_PE_ARN=arn:aws:sns:us-east-1:123456789012:SNSTopicPE
-    SNS_TOPIC_CL_ARN=arn:aws:sns:us-east-1:123456789012:SNSTopicCL
-
-    # Variables de entorno para SQS (Simple Queue Service)
-    SQS_PE_URL=https://sqs.us-east-1.amazonaws.com/123456789012/SQS_PE
-    SQS_CL_URL=https://sqs.us-east-1.amazonaws.com/123456789012/SQS_CL
-
-    # Variables de entorno para DynamoDB (Opcionales)
-    DYNAMODB_TABLE=AppointmentsTable
-
-    # Variables de entorno para AWS Lambda (Opcionales)
-    AWS_REGION=us-east-1
-    ```
-
-2. Asegúrate de que las credenciales de AWS estén configuradas correctamente:
-
-    ```bash
-    aws 
-    ```
-
-## **Despliegue**
 
 1. Crea un archivo `.env` en la raíz del proyecto con las siguientes variables de entorno:
 
@@ -159,6 +127,7 @@ La API expone los siguientes endpoints:
         "countryISO": "PE"
     }
     ```
+    
 - Respuesta Exitosa:
 
     ```json
