@@ -8,15 +8,18 @@
     "offline": "serverless offline start",
     "test": "jest",
     "lint": "eslint . --ext .ts",
-    "build": "tsc"
+    "build": "tsc",
+    "swagger": "ts-node -r tsconfig-paths/register src/swagger.ts"
   },
   "author": "Andres",
   "license": "MIT",
   "devDependencies": {
     "@types/aws-lambda": "^8.10.119",
+    "@types/express": "^5.0.0",
     "@types/glob": "^8.1.0",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.11.19",
+    "@types/swagger-ui-express": "^4.1.8",
     "@typescript-eslint/eslint-plugin": "^7.1.1",
     "@typescript-eslint/parser": "^7.1.1",
     "eslint": "^8.56.0",
@@ -30,10 +33,14 @@
     "serverless-offline": "^12.0.4",
     "serverless-plugin-typescript": "^2.1.5",
     "ts-jest": "^29.1.2",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.3.3"
   },
   "dependencies": {
     "aws-sdk": "^2.1563.0",
-    "mysql2": "^3.9.7"
+    "mysql2": "^3.9.7",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   }
 }

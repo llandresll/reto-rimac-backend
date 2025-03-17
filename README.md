@@ -16,6 +16,7 @@ Esta API permite a los asegurados agendar citas médicas en centros médicos de 
 8. [Ejemplos de Uso](#ejemplos-de-uso)
 9. [Pruebas](#pruebas)
 10. [Estructura del Proyecto](#estructura-del-proyecto)
+11. [Documentación Swagger](#documentación-swagger)
 
 ---
 
@@ -84,9 +85,6 @@ El proyecto consiste en una API backend que permite a los asegurados agendar cit
 
     # Variables de entorno para DynamoDB (Opcionales)
     DYNAMODB_TABLE=AppointmentsTable
-
-    # Variables de entorno para AWS Lambda (Opcionales)
-    AWS_REGION=us-east-1
     ```
 
 2. Asegúrate de que las credenciales de AWS estén configuradas correctamente:
@@ -193,3 +191,21 @@ reto-rimac-backend/
 ├── .env                     # Variables de entorno
 └── README.md                # Documentación del proyecto
 ````
+
+## **Documentación Swagger**
+
+Para generar y visualizar la documentación Swagger de la API, sigue estos pasos:
+
+1. Ejecuta el siguiente comando para iniciar el servidor de Swagger:
+
+    ```bash
+    npm run swagger
+    ```
+
+2. Abre tu navegador y visita la siguiente URL para ver la documentación Swagger:
+
+    ```
+    http://localhost:3000/api-docs
+    ```
+
+Esto te permitirá ver y probar los endpoints de la API directamente desde la interfaz de Swagger UI.

@@ -4,7 +4,13 @@
         "module": "commonjs",
         "outDir": ".build",
         "strict": true,
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "baseUrl": "./",
+        "paths": {
+            "swaggerConfig": [
+                "./swaggerConfig"
+            ]
+        }
     },
     "include": [
         "src/**/*.ts"

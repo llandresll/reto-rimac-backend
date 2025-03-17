@@ -40,6 +40,63 @@ const validateCreateAppointmentRequest = (body: any): body is CreateAppointmentR
     return true;
 };
 
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Appointment:
+ *       type: object
+ *       properties:
+ *         appointmentId:
+ *           type: string
+ *         insuredId:
+ *           type: string
+ *         countryISO:
+ *           type: string
+ *         status:
+ *           type: string
+ *         createdAt:
+ *           type: string
+ *     CreateAppointmentRequest:
+ *       type: object
+ *       required:
+ *         - insuredId
+ *         - scheduleId
+ *         - countryISO
+ *       properties:
+ *         insuredId:
+ *           type: string
+ *         scheduleId:
+ *           type: number
+ *         countryISO:
+ *           type: string
+ */
+
+/**
+ * @swagger
+ * /appointment:
+ *   post:
+ *     summary: Create an appointment
+ *     description: Creates a new medical appointment
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateAppointmentRequest'
+ *     responses:
+ *       200:
+ *         description: Appointment created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Appointment'
+ *       400:
+ *         description: Invalid input
+ *       500:
+ *         description: Internal server error
+ */
 /**
  * Crea una cita médica en DynamoDB.
  * @param appointment - Datos de la cita.
@@ -51,6 +108,31 @@ const createAppointment = async (appointment: Appointment): Promise<void> => {
     }).promise();
 };
 
+/**
+ * @swagger
+ * /appointment/{insuredId}:
+ *   get:
+ *     summary: Get appointments by insuredId
+ *     description: Retrieves appointments for a given insuredId
+ *     parameters:
+ *       - in: path
+ *         name: insuredId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the insured
+ *     responses:
+ *       200:
+ *         description: List of appointments
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Appointment'
+ *       500:
+ *         description: Internal server error
+ */
 /**
  * Publica un mensaje en el tópico de SNS correspondiente.
  * @param appointment - Datos de la cita.
