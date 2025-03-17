@@ -1,0 +1,109 @@
+service: reto-rimac-backend
+
+frameworkVersion: "3"
+
+# Usar el plugin serverless-dotenv-plugin
+plugins:
+  - serverless-dotenv-plugin
+  - serverless-plugin-typescript
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  environment:
+    # Variables de entorno para RDS (MySQL)
+    RDS_HOST: database-reto.cixcsaaqwlcf.us-east-1.rds.amazonaws.com
+    RDS_USER: admin
+    RDS_PASSWORD: wiCdam-3ranru-gopmed
+    RDS_DATABASE: appointments_db
+    # Variables de entorno para SNS (Simple Notification Service)
+    SNS_TOPIC_PE_ARN: arn:aws:sns:us-east-1:374444951922:sns_pe
+    SNS_TOPIC_CL_ARN: arn:aws:sns:us-east-1:374444951922:sns_cl
+    # Variables de entorno para SQS (Simple Queue Service)
+    SQS_PE_URL: https://sqs.us-east-1.amazonaws.com/374444951922/sqs_pe
+    SQS_CL_URL: https://sqs.us-east-1.amazonaws.com/374444951922/sqs_cl
+    # Variables de entorno para DynamoDB (Opcionales, si no se usan en serverless.yml)
+    DYNAMODB_TABLE: AppointmentsTable
+    # Variables de entorno para AWS Lambda (Opcionales)
+    # AWS_REGION: us-east-1
+
+functions:
+  appointment:
+    handler: src/handlers/appointment.handler
+    events:
+      - http:
+          path: appointment
+          method: post
+          cors: true
+      - http:
+          path: appointment/{insuredId}
+          method: get
+          cors: true
+
+  appointment_pe:
+    handler: src/handlers/appointment_pe.handler
+    events:
+      - sqs:
+          arn: !GetAtt SQSPE.Arn
+
+  appointment_cl:
+    handler: src/handlers/appointment_cl.handler
+    events:
+      - sqs:
+          arn: !GetAtt SQSCL.Arn
+
+resources:
+  Resources:
+    AppointmentsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}
+        AttributeDefinitions:
+          - AttributeName: appointmentId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: appointmentId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+    SNSTopicPE:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: SNSTopicPE
+
+    SNSTopicCL:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: SNSTopicCL
+
+    SQSPE:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: SQS_PE
+
+    SQSCL:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: SQS_CL
+
+    SNSSubscriptionPE:
+      Type: AWS::SNS::Subscription
+      Properties:
+        TopicArn: !Ref SNSTopicPE
+        Protocol: sqs
+        Endpoint: !GetAtt SQSPE.Arn
+
+    SNSSubscriptionCL:
+      Type: AWS::SNS::Subscription
+      Properties:
+        TopicArn: !Ref SNSTopicCL
+        Protocol: sqs
+        Endpoint: !GetAtt SQSCL.Arn
+
+    AppointmentEventBus:
+      Type: AWS::Events::EventBus
+      Properties:
+        Name: AppointmentEventBus
