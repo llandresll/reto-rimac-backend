@@ -8,6 +8,12 @@ export interface Appointment {
     status: 'pending' | 'completed'; // Estado de la cita
     createdAt: string; // Fecha de creación de la cita
 }
+export interface AppointmentResponse {
+    appointmentId: string; // Identificador único de la cita
+    insuredId: string; // ID del asegurado
+    countryISO: string; // Código ISO del país (PE o CL)
+    status: 'pending' | 'completed'; // Estado de la cita
+}
 
 /**
  * Valida si un objeto cumple con la estructura de una cita médica.

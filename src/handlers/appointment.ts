@@ -1,8 +1,12 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { DynamoDB, SNS } from 'aws-sdk';
+import { DynamoDB, SNS, config as AWSConfig } from 'aws-sdk';
+import dotenv from 'dotenv';
+import { Appointment, AppointmentResponse } from 'src/models/appointment';
+dotenv.config();
+AWSConfig.update({ region: process.env.AWS_REGION || 'us-east-1' });
 
 // Constantes para evitar "magic strings"
-const APPOINTMENTS_TABLE = process.env.APPOINTMENTS_TABLE!;
+const APPOINTMENTS_TABLE = process.env.DYNAMODB_TABLE!;
 const SNS_TOPIC_PE_ARN = process.env.SNS_TOPIC_PE_ARN!;
 const SNS_TOPIC_CL_ARN = process.env.SNS_TOPIC_CL_ARN!;
 
@@ -11,14 +15,6 @@ const dynamoDb = new DynamoDB.DocumentClient();
 const sns = new SNS();
 
 // Tipos para mejorar la legibilidad y seguridad del código
-type Appointment = {
-    appointmentId: string;
-    insuredId: string;
-    countryISO: string;
-    status: string;
-    createdAt: string;
-};
-
 type CreateAppointmentRequest = {
     insuredId: string;
     scheduleId: number;
@@ -100,12 +96,16 @@ const validateCreateAppointmentRequest = (body: any): body is CreateAppointmentR
 /**
  * Crea una cita médica en DynamoDB.
  * @param appointment - Datos de la cita.
- */
-const createAppointment = async (appointment: Appointment): Promise<void> => {
-    await dynamoDb.put({
-        TableName: APPOINTMENTS_TABLE,
-        Item: appointment,
-    }).promise();
+ */const createAppointment = async (appointment: Appointment): Promise<void> => {
+    try {
+        await dynamoDb.put({
+            TableName: APPOINTMENTS_TABLE,
+            Item: appointment,
+        }).promise();
+    } catch (error) {
+        console.error('Error en createAppointment:', error);
+        throw new Error('Error al crear la cita en DynamoDB');
+    }
 };
 
 /**
@@ -138,11 +138,16 @@ const createAppointment = async (appointment: Appointment): Promise<void> => {
  * @param appointment - Datos de la cita.
  */
 const publishToSNS = async (appointment: Appointment): Promise<void> => {
-    const topicArn = appointment.countryISO === 'PE' ? SNS_TOPIC_PE_ARN : SNS_TOPIC_CL_ARN;
-    await sns.publish({
-        TopicArn: topicArn,
-        Message: JSON.stringify(appointment),
-    }).promise();
+    try {
+        const topicArn = appointment.countryISO === 'PE' ? SNS_TOPIC_PE_ARN : SNS_TOPIC_CL_ARN;
+        await sns.publish({
+            TopicArn: topicArn,
+            Message: JSON.stringify(appointment),
+        }).promise();
+    } catch (error) {
+        console.error('Error en publishToSNS:', error);
+        throw new Error('Error al publicar en SNS');
+    }
 };
 
 /**
@@ -150,27 +155,34 @@ const publishToSNS = async (appointment: Appointment): Promise<void> => {
  * @param insuredId - ID del asegurado.
  * @returns Lista de citas.
  */
-const getAppointmentsByInsuredId = async (insuredId: string): Promise<Appointment[]> => {
+const getAppointmentsByInsuredId = async (insuredId: string): Promise<AppointmentResponse[]> => {
     const result = await dynamoDb.query({
         TableName: APPOINTMENTS_TABLE,
+        IndexName: 'InsuredIdIndex', // Asegúrate de que este índice existe en tu tabla
         KeyConditionExpression: 'insuredId = :insuredId',
         ExpressionAttributeValues: {
             ':insuredId': insuredId,
         },
+        ProjectionExpression: 'appointmentId, insuredId, countryISO, #status',
+        ExpressionAttributeNames: {
+            '#status': 'status',
+        },
     }).promise();
 
-    return result.Items as Appointment[];
+    return result.Items as AppointmentResponse[];
 };
 
 /**
  * Maneja la creación de una cita médica.
  * @param event - Evento de API Gateway.
  * @returns Respuesta HTTP.
- */
-const handleCreateAppointment = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+ */const handleCreateAppointment = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     try {
         if (!event.body) {
-            throw new Error('Cuerpo de la solicitud no proporcionado');
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ message: 'Cuerpo de la solicitud no proporcionado' }),
+            };
         }
 
         const body = JSON.parse(event.body);
@@ -209,7 +221,10 @@ const handleGetAppointments = async (event: APIGatewayProxyEvent): Promise<APIGa
     try {
         const insuredId = event.pathParameters?.insuredId;
         if (!insuredId) {
-            throw new Error('El parámetro insuredId es requerido');
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ message: 'El parámetro insuredId es requerido' }),
+            };
         }
 
         const appointments = await getAppointmentsByInsuredId(insuredId);
@@ -221,8 +236,8 @@ const handleGetAppointments = async (event: APIGatewayProxyEvent): Promise<APIGa
     } catch (error) {
         console.error('Error en handleGetAppointments:', error);
         return {
-            statusCode: 500,
-            body: JSON.stringify({ message: 'Error interno del servidor' }),
+            statusCode: error instanceof Error && error.message.includes('requeridos') ? 400 : 500,
+            body: JSON.stringify({ message: error instanceof Error ? error.message : 'Error interno del servidor' }),
         };
     }
 };
@@ -245,10 +260,10 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
             };
         }
     } catch (error) {
-        console.error('Error en el handler:', error);
+        console.error('Error en handler:', error);
         return {
-            statusCode: 500,
-            body: JSON.stringify({ message: 'Error interno del servidor' }),
+            statusCode: error instanceof Error && error.message.includes('requeridos') ? 400 : 500,
+            body: JSON.stringify({ message: error instanceof Error ? error.message : 'Error interno del servidor' }),
         };
     }
 };

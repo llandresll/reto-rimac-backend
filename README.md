@@ -171,7 +171,7 @@ La API expone los siguientes endpoints:
 Para ejecutar las pruebas unitarias, usa el siguiente comando:
 
 ```bash
-npm test
+npm run test
 ```
 
 ## **Estructura del Proyecto**

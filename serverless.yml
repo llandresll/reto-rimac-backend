@@ -62,9 +62,21 @@ resources:
         AttributeDefinitions:
           - AttributeName: appointmentId
             AttributeType: S
+          - AttributeName: insuredId
+            AttributeType: S
         KeySchema:
           - AttributeName: appointmentId
             KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: InsuredIdIndex
+            KeySchema:
+              - AttributeName: insuredId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
